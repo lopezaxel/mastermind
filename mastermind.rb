@@ -14,16 +14,40 @@ class Game
   end
 
   def start_game
-    puts "Enter any of the next colors with spaces after each color: "
-    p @board.colors_code
+    puts "\nType 'guess' to be the guesser\nType 'code' to be creator " +
+      "of the code: "
+    answer = gets.chomp
 
-    until @correct_guess || @player_guesses > @max_guesses
-      player_guess = @human.make_guess
-      @correct_guess = check_guess(player_guess, @computer.code)
-      give_feedback(player_guess, @computer.code)
+    if answer == "guess"
+      until @correct_guess || @player_guesses > @max_guesses
+        player_guess = @human.make_guess
+        @correct_guess = check_guess(player_guess, @computer.code)
+        give_feedback(player_guess, @computer.code)
+  
+        @player_guesses += 1
+      end
 
-      @player_guesses += 1
+    elsif answer == "code"
+      player_code = @human.enter_secret_code
+      computer_code = @computer.code
+
+      until @correct_guess
+        computer_code.map!.with_index do |color, index|
+          if color != player_code[index]
+            color = @board.colors_code.sample
+          elsif color == player_code[index]
+            color = color
+          end
+        end
+        
+        p computer_code
+
+        @correct_guess = check_guess(computer_code, player_code)
+        
+        @player_guesses += 1
+      end
     end
+    
 
     print "\nType 'yes' to restart the game: "
     restart_answer = gets.chomp
@@ -33,7 +57,7 @@ class Game
   def restart_game
     @computer.restart_computer
     @correct_guess = false
-    @player_guess = 0
+    @player_guesses = 0
     start_game
   end
 
@@ -44,19 +68,30 @@ class Game
   def give_feedback(guess, code)
     copy_code = code.slice(0, code.length)
 
-    guess.each_with_index do |color, index|
-      if guess[index] == copy_code[index]
-        copy_code[index] = ""
-        guess[index] = ""
-        puts correct_color_and_position(color, index)
+    check_color_position(guess, copy_code)
+    check_color(guess, copy_code)
+  end
+
+  def check_color_position(guess, code)
+    # Check if guess colors are correct in color and position to code ones.
+    guess.each_with_index do |color, position|
+      if guess[position] == code[position]
+        puts correct_color_and_position(color, position)
+
+        code[position] = ""
+        guess[position] = ""
       end
     end
+  end
 
-    guess.each_with_index do |color, index|
-      copy_code.each_with_index do |let, ind| 
-        if let == color && color != ""
-          puts correct_color(color, index)
-          copy_code[ind] = ""
+  def check_color(guess, code)
+    # Check if guess colors are present in code but in incorrect position.
+    guess.each_with_index do |color, position|
+      code.each_with_index do |color_code, position_code| 
+        if color_code == color && color != ""
+          puts correct_color(color, position)
+          
+          code[position_code] = ""
           break
         end
       end
@@ -88,8 +123,8 @@ class Board
     @colors_code = ["red", "blue", "yellow", "green", "purple", "orange"]
   end
 
-  def select_random_code(code)
-    4.times { code << @colors_code.sample }
+  def select_random_code(code, num = 4)
+    num.times { code << @colors_code.sample }
     return code
   end
 end
@@ -107,6 +142,11 @@ class Computer
     @code = []
     @code = @board.select_random_code(@code)
   end
+
+  def select_guess(num)
+    guess = []
+    guess = @board.select_random_code(guess, num)
+  end
 end
 
 class Human
@@ -120,6 +160,14 @@ class Human
     guess = guess.split(" ")
 
     guess
+  end
+
+  def enter_secret_code
+    print "\nEnter the secret code: "
+    code = gets.chomp
+    code = code.split(" ")
+
+    code
   end
 end
 
