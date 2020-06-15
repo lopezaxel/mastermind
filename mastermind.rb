@@ -14,6 +14,9 @@ class Game
   end
 
   def start_game
+    puts "Enter any of the next colors with spaces after each color: "
+    p @board.colors_code
+
     until @correct_guess || @player_guesses > @max_guesses
       player_guess = @human.make_guess
       @correct_guess = check_guess(player_guess, @computer.code)
@@ -24,12 +27,14 @@ class Game
 
     print "\nType 'yes' to restart the game: "
     restart_answer = gets.chomp
-    # restart_game if restart_answer == "yes"
+    restart_game if restart_answer == "yes"
   end
 
   def restart_game
     @computer.restart_computer
-    initialize
+    @correct_guess = false
+    @player_guess = 0
+    start_game
   end
 
   def check_guess(guess, code)
@@ -39,22 +44,31 @@ class Game
   def give_feedback(guess, code)
     copy_code = code.slice(0, code.length)
 
-    guess.each_with_index do |letter, index|
+    guess.each_with_index do |color, index|
       if guess[index] == copy_code[index]
         copy_code[index] = ""
-        puts correct_letter_and_position(letter, index)
-      elsif copy_code.include?(letter)
-        puts correct_letter(letter, index)
+        guess[index] = ""
+        puts correct_color_and_position(color, index)
+      end
+    end
+
+    guess.each_with_index do |color, index|
+      copy_code.each_with_index do |let, ind| 
+        if let == color && color != ""
+          puts correct_color(color, index)
+          copy_code[ind] = ""
+          break
+        end
       end
     end
   end
 
-  def correct_letter_and_position(letter, position)
-    "Letter #{letter} at position #{position + 1} is correct."
+  def correct_color_and_position(color, position)
+    "Color #{color} at position #{position + 1} is correct."
   end
   
-  def correct_letter(letter, position)
-    "Letter #{letter} at position #{position + 1} is correct but at incorrect " + 
+  def correct_color(color, position)
+    "Color #{color} at position #{position + 1} is correct but at incorrect " + 
       "position."
   end
 
@@ -68,12 +82,14 @@ class Game
 end
 
 class Board
+  attr_reader :colors_code
+
   def initialize
-    @possible_letters_code = ["A", "B", "C", "D", "E", "F"]
+    @colors_code = ["red", "blue", "yellow", "green", "purple", "orange"]
   end
 
   def select_random_code(code)
-    4.times { code << @possible_letters_code.sample }
+    4.times { code << @colors_code.sample }
     return code
   end
 end
@@ -84,10 +100,12 @@ class Computer
   def initialize(board)
     @code = []
     @code = board.select_random_code(@code)
+    @board = board
   end
 
   def restart_computer
-    initialize
+    @code = []
+    @code = @board.select_random_code(@code)
   end
 end
 
@@ -99,7 +117,7 @@ class Human
   def make_guess
     print "\nEnter your guess: "
     guess = gets.chomp
-    guess = guess.split("")
+    guess = guess.split(" ")
 
     guess
   end
