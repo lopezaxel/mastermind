@@ -17,60 +17,80 @@ class Game
 
   def start_game
     puts "\nType 'guess' to be the guesser\nType 'code' to be creator " \
-         'of the code: '
+         "of the code: "
     answer = gets.chomp
 
     if answer == 'guess'
-      until @correct_guess || @player_guesses > @max_guesses
-        player_guess = @human.make_guess
-        @correct_guess = check_guess(player_guess, @computer.code)
-        give_feedback(player_guess, @computer.code)
-
-        @player_guesses += 1
-      end
-
+      guess_option
     elsif answer == 'code'
-      player_code = @human.make_guess
-      computer_code = @computer.code
-
-      until @correct_guess || @player_guesses > @max_guesses
-        final_guess = ['', '', '', '']
-        player_copy = player_code.slice(0, player_code.length)
-
-        computer_code.each_with_index do |color, index|
-          if color == player_copy[index]
-            player_copy[index] = ''
-          else
-            final_guess[index] = color
-            computer_code[index] = ''
-          end
-        end
-
-        final_guess.each_with_index do |color, index|
-          player_copy.each_with_index do |col, ind|
-            next if !(col == color && color != '')
-
-            empty_place = select_empty_string(computer_code)
-            computer_code[empty_place] = color
-            final_guess[index] = ''
-            player_copy[ind] = ''
-          end
-        end
-
-        computer_code.each_with_index do |color, index|
-          computer_code[index] = @board.get_random_color if color == ''
-        end
-
-        p computer_code
-
-        @correct_guess = check_guess(computer_code, player_code)
-        @player_guesses += 1
-      end
+      code_option
     end
 
+    check_restart
+  end
+
+  def check_restart
     print "\nType 'yes' to restart the game: "
     restart_answer = gets.chomp
     restart_game if restart_answer == 'yes'
+  end
+
+  def guess_option
+    until @correct_guess || @player_guesses > @max_guesses
+      player_guess = @human.make_guess
+      @correct_guess = check_guess(player_guess, @computer.code)
+      give_feedback(player_guess, @computer.code)
+
+      @player_guesses += 1
+    end
+  end
+
+  def code_option
+    player_code = @human.enter_secret_code
+
+    until @correct_guess || @player_guesses > @max_guesses
+      final_guess = ['', '', '', '']
+      player_copy = player_code.slice(0, player_code.length)
+
+      keep_right_colors(@computer.code, player_copy, final_guess)
+      move_present_colors(@computer.code, player_copy, final_guess)
+      random_colors_if_incorrect(@computer.code)
+
+      p @computer.code
+
+      @correct_guess = check_guess(@computer.code, player_code)
+      @player_guesses += 1
+    end
+  end
+
+  def random_colors_if_incorrect(guess)
+    guess.each_with_index do |color, index|
+      guess[index] = @board.get_random_color if color == ''
+    end
+  end
+
+  def move_present_colors(guess, code, final_guess)
+    final_guess.each_with_index do |color, index|
+      code.each_with_index do |col, ind|
+        next if !(col == color && color != '')
+
+        empty_place = select_empty_string(guess)
+        guess[empty_place] = color
+        final_guess[index] = ''
+        code[ind] = ''
+      end
+    end
+  end
+
+  def keep_right_colors(guess, code, final_guess)
+    guess.each_with_index do |color, index|
+      if color == code[index]
+        code[index] = ''
+      else
+        final_guess[index] = color
+        guess[index] = ''
+      end
+    end
   end
 
   def select_empty_string(guess)
@@ -114,7 +134,7 @@ class Game
     # Check if guess colors are present in code but in incorrect position.
     guess.each_with_index do |color, position|
       code.each_with_index do |color_code, position_code|
-        next unless color_code == color && color != ''
+        next if !(color_code == color && color != '')
 
         puts correct_color(color, position)
 
