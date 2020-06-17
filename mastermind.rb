@@ -18,7 +18,9 @@ class Game
   def start_game
     puts "\nType 'guess' to be the guesser\nType 'code' to be creator " \
          "of the code: "
+
     answer = gets.chomp
+    puts "\nPossible colors: red blue yellow orange purple green."
 
     if answer == 'guess'
       guess_option
@@ -201,17 +203,15 @@ class Human
   def initialize; end
 
   def make_guess
-    print "\nEnter your guess: "
-    guess = gets.chomp
-    guess = guess.split(' ')
+    print "\nEnter your guess, ex 'orange blue orange red': "
+    guess = gets.chomp.split(' ')
 
     guess
   end
 
   def enter_secret_code
-    print "\nEnter the secret code: "
-    code = gets.chomp
-    code = code.split(' ')
+    print "\nEnter the secret code, ex 'orange blue orange red': "
+    code = gets.chomp.split(' ')
 
     code
   end
