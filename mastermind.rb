@@ -49,11 +49,14 @@ class Game
     player_code = @human.enter_secret_code
 
     until @correct_guess || @player_guesses > @max_guesses
-      final_guess = ['', '', '', '']
+      temporal_guess = ['', '', '', '']
       player_copy = player_code.slice(0, player_code.length)
 
-      keep_right_colors(@computer.code, player_copy, final_guess)
-      move_present_colors(@computer.code, player_copy, final_guess)
+      # If color and position matches keep it, if color is present but in
+      # wrong position change position and keep it, and color doesn't match
+      # replace with random color.
+      keep_right_colors(@computer.code, player_copy, temporal_guess)
+      move_present_colors(@computer.code, player_copy, temporal_guess)
       random_colors_if_incorrect(@computer.code)
 
       p @computer.code
@@ -69,25 +72,25 @@ class Game
     end
   end
 
-  def move_present_colors(guess, code, final_guess)
-    final_guess.each_with_index do |color, index|
+  def move_present_colors(guess, code, temporal_guess)
+    temporal_guess.each_with_index do |color, index|
       code.each_with_index do |col, ind|
         next if !(col == color && color != '')
 
         empty_place = select_empty_string(guess)
         guess[empty_place] = color
-        final_guess[index] = ''
+        temporal_guess[index] = ''
         code[ind] = ''
       end
     end
   end
 
-  def keep_right_colors(guess, code, final_guess)
+  def keep_right_colors(guess, code, temporal_guess)
     guess.each_with_index do |color, index|
       if color == code[index]
         code[index] = ''
       else
-        final_guess[index] = color
+        temporal_guess[index] = color
         guess[index] = ''
       end
     end
